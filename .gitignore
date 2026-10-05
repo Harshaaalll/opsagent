@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.pytest_cache/
+runs/*
+!runs/.gitkeep
+sandbox/data/
+sandbox/invoices/
+*.egg-info/
+.DS_Store
+company/lessons.jsonl
