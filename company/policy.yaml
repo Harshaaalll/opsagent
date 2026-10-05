@@ -1,0 +1,19 @@
+# Machine-readable approval policy, enforced by the deterministic gate (not by the model).
+# Mirrors the prose in policies/accounts_payable.md [AP-02]. Editing this file changes behaviour; no code change.
+approvals:
+  currency: INR
+  auto_approve_max_amount: 25000
+  always_human_above: 100000
+  trusted_vendors:
+    - Acme Supplies Pvt Ltd
+    - Acme Supply Co
+    - Initech Services
+    - Globex Logistics
+  # form-field labels the gate reads to find the values it must check (case-insensitive substrings)
+  field_patterns:
+    vendor: [vendor, supplier]
+    invoice_number: [invoice number, supplier ref]
+    invoice_date: [invoice date]
+    due_date: [due date]
+    amount: [amount, total payable]
+    currency: [currency]
