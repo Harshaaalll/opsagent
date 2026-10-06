@@ -6,8 +6,8 @@
 **Role:** Founding Engineer
 
 **Project: Github Repository link:** `https://github.com/Harshaaalll/opsagent`
-**Live demo link:** none (runs locally; sandbox included)
-**Demo Video Link:** `[paste after recording; see DEMO_SCRIPT.md]`
+**Live demo link:** https://harshaaalll.github.io/opsagent/ (a static project page on GitHub Pages: recorded run, screenshots, approval gate, test results. There is no public live agent, because it would expose the API key and a browser that writes records.)
+**Demo Video Link:** https://github.com/Harshaaalll/opsagent/blob/main/docs/assets/demo.mp4 (also embedded on the project page). Disclosure: this is an automated walkthrough built from a real recorded run (real screenshots, the agent's own stated reasons, real terminal output) with an AI-generated voice, and the approval in that run was given by a script. It is not a live screen recording of me using it. Replace it with your own recording if you make one; see DEMO_SCRIPT.md.
 
 ---
 

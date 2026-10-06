@@ -10,6 +10,8 @@
 
 </div>
 
+<p align="center"><a href="https://harshaaalll.github.io/opsagent/"><b>Live project page</b></a> (recorded run, screenshots, approval gate, tests) · <a href="https://github.com/Harshaaalll/opsagent/blob/main/docs/assets/demo.mp4"><b>Walkthrough video</b></a> (narrated from real run artefacts; AI voice)</p>
+
 Built for CentrAlign AI's **AI Employee / Autonomous Company Operator** problem (Founding Engineer track). It runs against a local **mock company**
 (vendor mail portal + ERP + PDF invoices, with switchable faults). No real systems, no real credentials.
 
@@ -25,59 +27,15 @@ Built for CentrAlign AI's **AI Employee / Autonomous Company Operator** problem 
 
 ## 🔁 How a run works
 
-```mermaid
-flowchart TD
-    V["🎙️ Voice or text request"] --> K["📚 Retrieve company policy<br/>+ lessons from past runs"]
-    K --> P["🗺️ Plan"]
-    P --> A["🖱️ Act: one tool call per step"]
-    A --> O["👁️ Observe page, PDF, ERP"]
-    O --> D{"Next?"}
-    D -->|more work| A
-    D -->|unsure or conflicting sources| H["🙋 Ask a human"]
-    H --> A
-    D -->|think it is done| F["finish + claims"]
-    F --> VF{"🔍 Independent verifier<br/>re-reads the system"}
-    VF -->|pass| R["📄 Report + screenshots + audit log"]
-    VF -->|fail, with reason| A
-```
+<p align="center"><img src="docs/assets/diagram-run.svg" alt="Flowchart of a run: request, retrieve policy, plan, act, observe, decide, ask a human or finish, independent verifier, report" width="460"></p>
 
 ## 🚦 The approval gate (policy lives in code, not in the prompt)
 
-```mermaid
-flowchart TD
-    C["High-risk click, e.g. Save bill"] --> PV["Compute preview: exact form values"]
-    PV --> G{"Policy gate<br/>company/policy.yaml"}
-    G -->|duplicate in ERP via API| B["⛔ BLOCK"]
-    G -->|trusted vendor, small amount,<br/>INR, sane dates| AU["✅ AUTO-APPROVE"]
-    G -->|over limit, new vendor, odd data,<br/>or ERP unreachable| HU["🙋 HUMAN approval<br/>sees values + every check"]
-    AU --> X["Execute: digest re-validated"]
-    HU -->|approve| X
-    HU -->|reject| N["Nothing written"]
-```
+<p align="center"><img src="docs/assets/diagram-gate.svg" alt="Flowchart of the approval gate: block, auto-approve, or human approval, then execute with the digest re-validated" width="520"></p>
 
 ## 🏗️ Architecture
 
-```mermaid
-flowchart TB
-    subgraph LLM["llm/"]
-      GM["Gemini function calling<br/>+ model fallback chain + speech-to-text"]
-    end
-    subgraph RT["runtime/"]
-      AG["agent loop"] --- CX["context: facts, compaction,<br/>conflict detector"]
-      AG --- GT["policy gate"]
-      AG --- VR["verifier + provenance"]
-    end
-    subgraph CORE["core/"]
-      RG["tool registry: permissions, input contracts,<br/>risk ladder, approval digest, breaker,<br/>safe retries, redacted audit"]
-      KN["knowledge: BM25 + aliases"] --- VT["vault: credential placeholders"]
-    end
-    subgraph TOOLS["tools/"]
-      BR["Playwright browser:<br/>numbered-element snapshots"] --- SY["read_pdf, erp_find_bills,<br/>search_company_knowledge"]
-    end
-    SB[("sandbox/<br/>mail portal + ERP + PDFs<br/>+ fault injection")]
-    GM --> AG --> RG --> BR --> SB
-    RG --> SY --> SB
-```
+<p align="center"><img src="docs/assets/diagram-arch.svg" alt="Architecture: llm, runtime, core and tools layers over the mock company sandbox" width="860"></p>
 
 ## 🚀 Quick start
 
