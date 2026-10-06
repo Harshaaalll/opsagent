@@ -201,3 +201,14 @@ def test_matching_mail_and_document_amounts_do_not_conflict():
     c.observe(1, "browser_click", {"ref": 7}, "t", {"snapshot": "invoice for INR 48,250.00", "url": "http://x/mail/message/m1"}, None)
     c.observe(2, "read_pdf", {"path": "a.pdf"}, "t", {"path": "a.pdf", "text": "Total 48,250.00"}, None)
     assert not c.notes
+
+
+def test_detail_pages_are_pinned_so_the_agent_need_not_reopen_them():
+    c = Context("g", 4000)
+    snap = "PAGE: Mail | http://x/mail/message/m1\nTEXT: From: Acme / Invoice for INR 48,250.00\nELEMENTS:\n[1] a \"Inbox\""
+    c.observe(1, "browser_click", {"ref": 7}, "t", {"snapshot": snap, "url": "http://x/mail/message/m1"}, None)
+    for i in range(2, 6):
+        c.observe(i, "browser_click", {"ref": 1}, "t", {"snapshot": "PAGE: Inbox\nTEXT: list", "url": "http://x/mail/"}, None)
+    view = c.render()
+    assert "Invoice for INR 48,250.00" in view and "untrusted" in view      # still visible long after the page was left
+    assert "page:/mail/:" not in view                                         # the inbox list itself is not pinned

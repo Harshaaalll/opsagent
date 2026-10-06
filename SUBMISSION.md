@@ -27,7 +27,10 @@ Browser observations are text snapshots with numbered, labelled elements (not se
 ### What parts of your system are genuinely autonomous?
 Choosing and sequencing actions (navigation, finding the right email by vendor/date, reading the PDF, filling the form); deciding it needs to check for duplicates; recovering from an expired session by re-authenticating via the vault;
 checking the ERP before retrying a failed save; deciding when sources conflict and a person must be asked; revising its plan; writing a lesson for future runs; deciding when it believes it is done and what evidence to offer.
-None of this is scripted per task: the loop contains no invoice-specific logic. 11 of 12 eval scenarios passed in one full pass; the failure was a network error to the model and it passed on rerun (see evals/RESULTS.md). One run per scenario, so variance is unmeasured.
+None of this is scripted per task: the loop contains no invoice-specific logic. 11 of 12 eval scenarios passed in one full pass; the failure was a network error to the model and it passed on rerun (see evals/RESULTS.md). Repeat runs (3 each): s01, s04 and s07 passed every time; the injection scenario passed 2/3 and then 3/3 after a context fix.
+
+### Does it include voice?
+Voice input only: `python -m opsagent voice` records speech, transcribes it with Gemini (non-English is translated), shows the transcript, and runs only after the person confirms. There is no spoken output yet.
 
 ### What is currently hard coded or manually configured?
 The sandbox apps and their data (and the fault toggles); the approval thresholds and trusted-vendor list (`company/policy.yaml`); the company procedures (markdown clauses I wrote); the allowed-hosts list;

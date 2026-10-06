@@ -78,23 +78,58 @@ async def cmd_run(args) -> int:
             proc.terminate()
 
 
+async def cmd_voice(args) -> int:
+    from . import voice
+    from .llm.base import LLMError
+    from .llm.gemini import GeminiLLM
+
+    llm = GeminiLLM(model=args.model)
+    try:
+        if args.audio:
+            audio, mime = Path(args.audio).read_bytes(), voice.mime_for(args.audio)
+        else:
+            audio, mime = voice.record(args.seconds), "audio/wav"
+        print("Transcribing...")
+        text = voice.clean_transcript(await llm.transcribe(audio, mime))
+    except LLMError as exc:
+        print(f"voice input failed: {exc}")
+        return 2
+    if not text:
+        print("No speech detected.")
+        return 2
+    task = voice.confirm(text)
+    if not task:
+        print("Cancelled; nothing was run.")
+        return 0
+    args.task = task
+    return await cmd_run(args)
+
+
+def _add_run_options(r) -> None:
+    r.add_argument("--faults", default="", help="comma list: session_expiry=2,ui_drift,flaky_submit=after_save,preload_duplicate,mail_amount_mismatch")
+    r.add_argument("--visible", action="store_true", help="show the browser window")
+    r.add_argument("--model", default=None)
+    r.add_argument("--base-url", default=DEFAULT_URL)
+
+
 def main() -> None:
     load_dotenv(ROOT / ".env")
     ap = argparse.ArgumentParser(prog="opsagent")
     sub = ap.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("run", help="run a task end to end")
     r.add_argument("task")
-    r.add_argument("--faults", default="", help="comma list: session_expiry=2,ui_drift,flaky_submit=after_save,preload_duplicate,mail_amount_mismatch")
-    r.add_argument("--visible", action="store_true", help="show the browser window")
-    r.add_argument("--model", default=None)
-    r.add_argument("--base-url", default=DEFAULT_URL)
+    _add_run_options(r)
+    v = sub.add_parser("voice", help="speak the request (or --audio file), confirm the transcript, then run it")
+    v.add_argument("--audio", default=None, help="use an audio file instead of the microphone")
+    v.add_argument("--seconds", type=float, default=None, help="record for N seconds (default: until Enter)")
+    _add_run_options(v)
     s = sub.add_parser("sandbox", help="start the mock company apps")
     s.add_argument("--port", type=int, default=8765)
     args = ap.parse_args()
     if args.cmd == "sandbox":
         os.chdir(ROOT)
         os.execvp(sys.executable, [sys.executable, "-m", "uvicorn", "sandbox.app:app", "--port", str(args.port)])
-    raise SystemExit(asyncio.run(cmd_run(args)))
+    raise SystemExit(asyncio.run(cmd_voice(args) if args.cmd == "voice" else cmd_run(args)))
 
 
 if __name__ == "__main__":
