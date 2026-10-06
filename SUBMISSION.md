@@ -1,7 +1,6 @@
-# Submission notes: draft answers for the CentrAlign Google Form
+# Submission answers for the CentrAlign Google Form
 
-> Drafts, written from what is actually built. **Fill the `[...]` placeholders from your real eval run and re-read every answer:
-> the form says you must be able to explain, debug and modify all of it.** Never put passwords in the form.
+> Written from what is actually built and measured. Re-read every answer: the form says you must be able to explain, debug and modify all of it. Never put passwords or API keys in the form.
 
 **Role:** Founding Engineer
 
@@ -26,7 +25,7 @@ Browser observations are text snapshots with numbered, labelled elements (not se
 
 ### What parts of your system are genuinely autonomous?
 Choosing and sequencing actions (navigation, finding the right email by vendor/date, reading the PDF, filling the form); deciding it needs to check for duplicates; recovering from an expired session by re-authenticating via the vault;
-checking the ERP before retrying a failed save; deciding when sources conflict and a person must be asked; revising its plan; writing a lesson for future runs; deciding when it believes it is done and what evidence to offer.
+checking the ERP before retrying a failed save; deciding when sources conflict and a person must be asked; revising its plan; optionally writing a lesson for future runs; deciding when it believes it is done and what evidence to offer.
 None of this is scripted per task: the loop contains no invoice-specific logic. 11 of 12 eval scenarios passed in one full pass; the failure was a network error to the model and it passed on rerun (see evals/RESULTS.md). Repeat runs (3 each): s01, s04 and s07 passed every time; the injection scenario passed 2/3 and then 3/3 after a context fix.
 
 ### Does it include voice?
@@ -40,7 +39,7 @@ The gate's field matching is label-based, so a new system with different labels 
 ### What models, frameworks, APIs, libraries, AI coding tools, or existing projects did you use?
 Gemini (`gemini-flash-latest`; fallback chain of 3.x flash/flash-lite) via google-genai; Playwright; FastAPI/uvicorn; pydantic; pypdf; reportlab; httpx; PyYAML; pytest. No agent framework.
 **Existing project:** several core modules (tool registry/contracts, circuit breaker, loop budgets, context compaction, clause retrieval) are ported and adapted from my own earlier repo `sanwaad`; disclosed in the README.
-**AI coding tool:** Claude Code (Anthropic) assisted implementation; I reviewed the design/code.
+**AI coding tool:** Claude Code (Anthropic) wrote much of the implementation under my direction; I set the design and requirements and reviewed the code.
 
 ### What is the biggest technical limitation of your current solution?
 Perception and generalisation breadth: it reads pages as DOM text, so it cannot operate desktop apps or canvas-heavy UIs, and it has only been validated on two mock web apps. Closely related, verification is limited to what can be expressed as

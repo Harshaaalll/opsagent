@@ -101,5 +101,5 @@ Durable execution and scheduling · screenshot-grounded fallback for non-DOM app
 
 - **Models and libraries:** Google Gemini (`gemini-flash-latest` with a fallback chain) via `google-genai`; Playwright; FastAPI; pydantic; pypdf; reportlab; pytest. No agent framework.
 - **Prior code:** the tool registry and contracts, circuit breaker, loop budgets, context compaction and clause retrieval are ported and adapted from my earlier project [`sanwaad`](https://github.com/Harshaaalll/sanwaad). New here: per-call risk, effect previews and digest re-validation, provenance verification, the browser layer, sandbox, voice input and evals.
-- **AI coding tool:** built with Claude Code (Anthropic) assisting implementation; I reviewed the design and code.
+- **AI coding tool:** built with Claude Code (Anthropic), which wrote much of the implementation under my direction; I set the design and reviewed the code.
 - `.env` is gitignored; `.env.example` holds only mock-sandbox credentials.
