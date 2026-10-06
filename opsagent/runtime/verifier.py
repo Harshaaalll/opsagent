@@ -7,9 +7,10 @@ no LLM) then:
   1. RE-READS the world itself: runs each claim's read tool and compares the
      result with the expectation (post-state check, through a channel the agent
      did not write through),
-  2. checks PROVENANCE: every expected value must appear in what the agent read
-     from a *source* system (PDF, mail), so a hallucinated value cannot
-     verify itself even if it was typed into the ERP consistently,
+  2. checks PROVENANCE: every expected value THE AGENT WROTE (typed/selected) must
+     appear in what it read from a *source* system (PDF, mail), so a hallucinated
+     value cannot verify itself even if it was typed into the ERP consistently.
+     Values it only observed (read-only tasks) are evidenced by the re-read itself,
   3. returns per-claim verdicts. Any failure sends the agent back to work with
      the specific feedback, within a bounded retry budget.
 
@@ -96,6 +97,7 @@ class Verifier:
             return [Verdict("(no claims)", False, "a completed task needs at least one verifiable claim "
                             "(a read tool call plus the values you expect it to return)")]
         source = ctx.source_text(self.exclude)
+        written = ctx.written_text()   # provenance is only demanded for values the agent itself wrote
         out: list[Verdict] = []
         for c in claims:
             label = str(c.get("description") or c.get("tool"))
@@ -125,7 +127,10 @@ class Verifier:
                     continue
                 if not _same(got, want):
                     problems.append(f"{path}: expected {want!r}, the system shows {got!r}")
-                elif path.split(".")[-1] not in _NO_PROVENANCE and not appears(want, source):
+                elif (path.split(".")[-1] not in _NO_PROVENANCE and appears(want, written)
+                      and not appears(want, source)):
+                    # the agent WROTE this value and nothing it read from a source document contains it:
+                    # a value that merely matches what it typed proves nothing about where it came from
                     problems.append(f"{path}={want!r}: matches the system but was never read from a source "
                                     "document (PDF/mail), so its origin is unverified")
             out.append(Verdict(label, not problems, "verified against the system" if not problems else "; ".join(problems)))

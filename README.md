@@ -49,10 +49,20 @@ Every run writes `runs/<id>/`: `report.md` (summary, verification verdicts, appr
 (redacted tool-call log), and `screenshots/` (visual evidence).
 
 ```bash
-pytest                              # 23 tests, no API key needed (scripted LLM drives the real browser + sandbox)
+pytest                              # 26 tests, no API key needed (scripted LLM drives the real browser + sandbox)
 python -m evals.run                 # 12 scenarios against the real Gemini agent -> evals/RESULTS.md
 python -m evals.run --only s04_flaky_after_save --repeat 3
 ```
+
+## Results (real runs)
+
+Full table: [`evals/RESULTS.md`](evals/RESULTS.md). `pytest`: all tests pass without an API key (scripted LLM, real browser + sandbox).
+`python -m evals.run` with the real Gemini agent (`gemini-flash-latest`), 12 scenarios, one run each: **11/12 passed in one pass**; the one failure (`s01`) was a
+DNS error reaching the model, and it **passed on rerun**. Typical run: 20 to 30 steps, 3 to 6 minutes, about $0.03 (estimated). Read-only task: 2 steps.
+
+Failures found by evals and fixed along the way: a verifier leak (its own feedback counted as evidence), provenance wrongly demanded for read-only answers,
+and the agent guessing instead of asking when email and PDF amounts disagreed (now also caught by a deterministic cross-source check).
+Caveats: no repeats yet, so variance is unmeasured; scenarios were tuned against, so they are not blind tests.
 
 ## Architecture
 
@@ -69,7 +79,7 @@ opsagent/
   llm/       gemini.py     function-calling, retry, fallback model     scripted.py   deterministic LLM for tests
 sandbox/     FastAPI mock company: mail portal, ERP (UI + read API), PDF invoices, fault injection
 company/     policies/*.md (human-readable procedures) + policy.yaml (machine-enforced thresholds)
-evals/       scenarios, trace-level grader, runner        tests/   23 tests
+evals/       scenarios, trace-level grader, runner        tests/   26 tests
 ```
 
 ### The core ideas (and why)
@@ -94,7 +104,7 @@ evals/       scenarios, trace-level grader, runner        tests/   23 tests
 
 ## Models, frameworks and components used
 
-- **LLM:** Google Gemini via the `google-genai` SDK (default `gemini-2.5-flash`, fallback `gemini-2.5-flash-lite`), native function calling in `ANY` mode.
+- **LLM:** Google Gemini via the `google-genai` SDK (default `gemini-flash-latest`, with an ordered fallback chain of Gemini 3.x flash / flash-lite models), native function calling in `ANY` mode.
 - **Browser:** Playwright (Chromium). **Sandbox:** FastAPI + uvicorn. **PDFs:** reportlab (generate), pypdf (read). **Validation:** pydantic. **Tests:** pytest, pytest-asyncio.
 - **No agent framework** (no LangChain/LangGraph): the loop is ~300 lines I can walk through line by line.
 - **Pre-built code disclosure:** `core/contracts.py`, `core/breaker.py`, `core/registry.py`, `core/budget.py`, `runtime/context.py` and `core/knowledge.py` are **ported and adapted from my own earlier project

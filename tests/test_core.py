@@ -161,3 +161,43 @@ def test_context_keeps_facts_after_compaction_and_only_latest_snapshot_in_full()
     assert view.count("filler filler") == one_snapshot   # exactly ONE snapshot (the newest) is verbatim
     assert "compacted" in view
     assert "48,250.00" in c.source_text()
+
+
+async def test_provenance_applies_to_written_values_only():
+    """Read-only answers are evidenced by the system re-read; a value the agent TYPED needs a source."""
+    from opsagent.runtime.verifier import Verifier
+
+    class Out(BaseModel):
+        pass
+
+    async def find(inp):
+        return {"count": 1, "bills": [{"invoice_number": "INV-INI-3310", "amount": 15500.0}]}
+
+    r = ToolRegistry()
+    r.register(ToolSpec("erp_find_bills", "d", In, find))
+    v = Verifier(r)
+    claim = [{"tool": "erp_find_bills", "args_json": "{}",
+              "expect_json": '{"count": 1, "bills.0.invoice_number": "INV-INI-3310", "bills.0.amount": 15500.0}'}]
+    ctx = Context("g", 1000)                     # nothing typed: read-only task
+    assert all(x.passed for x in await v.verify(claim, ctx, ["erp_find_bills"], "r"))
+    ctx.observe(1, "browser_type", {"ref": 1, "text": "15500.0"}, "t", {"snapshot": "x", "url": "http://x/erp/"}, None)
+    out = await v.verify(claim, ctx, ["erp_find_bills"], "r")   # agent typed 15500 and no source has it
+    assert not all(x.passed for x in out) and "never read from a source" in out[0].detail
+
+
+def test_source_conflict_between_mail_and_document_is_flagged_once():
+    c = Context("g", 4000)
+    c.observe(1, "browser_click", {"ref": 7}, "t", {"snapshot": "Please find invoice for INR 46,250.00", "url": "http://x/mail/message/m1"}, None)
+    assert not c.notes
+    c.observe(2, "read_pdf", {"path": "a.pdf"}, "t", {"path": "a.pdf", "text": "Subtotal 40,889.83 Tax 7,360.17 Total 48,250.00"}, None)
+    assert any("SOURCE CONFLICT" in n for n in c.notes)
+    c.notes.clear()
+    c.observe(3, "browser_click", {"ref": 1}, "t", {"snapshot": "x", "url": "http://x/mail/"}, None)
+    assert not c.notes                                   # raised once, not repeatedly
+
+
+def test_matching_mail_and_document_amounts_do_not_conflict():
+    c = Context("g", 4000)
+    c.observe(1, "browser_click", {"ref": 7}, "t", {"snapshot": "invoice for INR 48,250.00", "url": "http://x/mail/message/m1"}, None)
+    c.observe(2, "read_pdf", {"path": "a.pdf"}, "t", {"path": "a.pdf", "text": "Total 48,250.00"}, None)
+    assert not c.notes

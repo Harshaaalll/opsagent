@@ -18,6 +18,7 @@ provenance check, so compaction can never make a true fact look invented.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -62,6 +63,8 @@ class Context:
         self.notes: list[str] = []          # kernel / verifier / gate messages shown on the next pass
         self.retrieved: str = ""
         self.all_seen: list[dict] = []      # raw {tool,url,text}, never compacted
+        self._conflict_noted = False
+        self.written: list[str] = []        # values the AGENT typed/selected (non-secret): these need provenance
 
     # -- writers ------------------------------------------------------------------
     def remember(self, key: str, text: str, step: int) -> None:
@@ -92,6 +95,11 @@ class Context:
                 outcome = raw[:140]
             if tool in PIN_TOOLS and output:
                 self.remember(f"{PIN_TOOLS[tool]}:{step}", self._pin_text(tool, args, output), step)
+        if error is None and tool in ("browser_type", "browser_select"):
+            val = str(args.get("text") if tool == "browser_type" else args.get("option") or "")
+            if val and "{{vault:" not in val:
+                self.written.append(val)
+        self._check_source_conflict()
         self.steps.append(Step(step, tool, args, thought, error is None, redact_text(outcome), redact_text(detail)))
 
     @staticmethod
@@ -160,3 +168,23 @@ class Context:
                 continue
             keep.append(o["text"])
         return "\n".join(keep)
+
+    _AMOUNT = re.compile(r"\d{1,3}(?:,\d{3})+\.\d{2}|\d+\.\d{2}")
+
+    def _check_source_conflict(self) -> None:
+        """Deterministic cross-source check: amounts quoted in a mail message vs. an attached document.
+        Only raised when both have amounts and they share none, so subtotals/tax lines do not trip it."""
+        if self._conflict_noted:
+            return
+        mail = {m for o in self.all_seen if "/mail/message/" in (o.get("url") or "")
+                for m in self._AMOUNT.findall(o["text"])}
+        doc = {m for o in self.all_seen if o["tool"] == "read_pdf" for m in self._AMOUNT.findall(o["text"])}
+        if mail and doc and not (mail & doc):
+            self._conflict_noted = True
+            self.notes.append(
+                f"SOURCE CONFLICT DETECTED: the email text quotes {sorted(mail)} but the attached document shows "
+                f"{sorted(doc)[:6]}. Do not enter anything yet. Check company knowledge for the rule on conflicting "
+                "sources and follow it (this normally means ask_human).")
+
+    def written_text(self) -> str:
+        return "\n".join(self.written)

@@ -35,7 +35,7 @@ from .prompt import CONTROL_NAMES, CONTROL_TOOLS, SYSTEM
 from .verifier import Verifier
 
 ROOT = Path(__file__).resolve().parents[2]
-ALWAYS_RETRIEVE = ("SEC-01", "SYS-02")
+ALWAYS_RETRIEVE = ("SEC-01", "SYS-01", "SYS-02")
 
 
 class Human(Protocol):
@@ -127,7 +127,7 @@ class _Run:
         self.gate = PolicyGate(rt.company / "policy.yaml", erp)
         self.verifier = Verifier(registry)
         self.ctx = Context(goal, rt.budget.context_tokens)
-        self.meter = Meter(rt.budget, model=getattr(rt.llm, "model", "gemini-2.5-flash"))
+        self.meter = Meter(rt.budget, model=getattr(rt.llm, "model", "gemini-flash-latest"))
         self.allowed = [s.name for s in registry.specs()]
         self.tool_decls = [s.as_function_schema() for s in registry.specs()] + CONTROL_TOOLS
         self.result = RunResult(run_id, goal, StopReason.ERROR, run_dir=run_dir)

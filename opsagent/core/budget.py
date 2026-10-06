@@ -33,9 +33,11 @@ class StopReason(str, Enum):
 CLEAN_STOPS = frozenset({StopReason.DONE, StopReason.NEEDS_HUMAN, StopReason.REJECTED})
 
 # USD per 1M tokens (input, output). Rough list prices; used for the cost meter only.
+# Placeholder estimates: Gemini 3.x list prices are not hard-coded here, so cost_usd is an ESTIMATE
+# (used for the budget guard and relative comparisons, not billing). Update from the pricing page.
 PRICING = {
-    "gemini-2.5-flash": (0.30, 2.50),
-    "gemini-2.5-flash-lite": (0.10, 0.40),
+    "gemini-3.8-flash": (0.30, 2.50),
+    "gemini-3.6-flash": (0.30, 2.50),
     "gemini-2.5-pro": (1.25, 10.0),
 }
 
@@ -46,7 +48,7 @@ def estimate_tokens(text: str) -> int:
 
 
 def cost_usd(model: str, prompt_tokens: int, output_tokens: int) -> float:
-    pin, pout = PRICING.get(model, PRICING["gemini-2.5-flash"])
+    pin, pout = PRICING.get(model, PRICING["gemini-3.8-flash"])
     return (prompt_tokens * pin + output_tokens * pout) / 1_000_000
 
 
@@ -60,7 +62,7 @@ class Budget:
     max_steps: int = 40
     max_tokens: int = 400_000
     max_cost_usd: float = 0.50
-    max_seconds: float = 300.0
+    max_seconds: float = 900.0
     stall_repeats: int = 3          # identical action this many times in a row
     max_verify_retries: int = 2     # times a failed verification may send the agent back to work
     context_tokens: int = 6_000     # rendered-history budget per pass; compaction above it
@@ -69,7 +71,7 @@ class Budget:
 @dataclass
 class Meter:
     budget: Budget
-    model: str = "gemini-2.5-flash"
+    model: str = "gemini-3.8-flash"
     steps: int = 0
     llm_calls: int = 0
     prompt_tokens: int = 0

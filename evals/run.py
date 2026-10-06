@@ -79,7 +79,7 @@ async def main() -> int:
         if proc:
             proc.terminate()
     passed = sum(r["passed"] for r in rows)
-    lines = [f"# Eval results", "", f"Model: `{args.model or os.environ.get('OPSAGENT_MODEL', 'gemini-2.5-flash')}`  |  "
+    lines = [f"# Eval results", "", f"Model: `{args.model or os.environ.get('OPSAGENT_MODEL', 'gemini-flash-latest')}`  |  "
              f"{time.strftime('%Y-%m-%d %H:%M')}  |  **{passed}/{len(rows)} runs passed**", "",
              "| scenario | result | stop | steps | cost (USD) | time | first problem |", "|---|---|---|---|---|---|---|"]
     for r in rows:

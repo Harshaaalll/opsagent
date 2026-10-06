@@ -27,7 +27,7 @@ Browser observations are text snapshots with numbered, labelled elements (not se
 ### What parts of your system are genuinely autonomous?
 Choosing and sequencing actions (navigation, finding the right email by vendor/date, reading the PDF, filling the form); deciding it needs to check for duplicates; recovering from an expired session by re-authenticating via the vault;
 checking the ERP before retrying a failed save; deciding when sources conflict and a person must be asked; revising its plan; writing a lesson for future runs; deciding when it believes it is done and what evidence to offer.
-None of this is scripted per task: the loop contains no invoice-specific logic. `[after evals: state the pass rate per scenario and what failed]`.
+None of this is scripted per task: the loop contains no invoice-specific logic. 11 of 12 eval scenarios passed in one full pass; the failure was a network error to the model and it passed on rerun (see evals/RESULTS.md). One run per scenario, so variance is unmeasured.
 
 ### What is currently hard coded or manually configured?
 The sandbox apps and their data (and the fault toggles); the approval thresholds and trusted-vendor list (`company/policy.yaml`); the company procedures (markdown clauses I wrote); the allowed-hosts list;
@@ -35,7 +35,7 @@ which form-label substrings the gate uses to find vendor/amount/dates; which URL
 The gate's field matching is label-based, so a new system with different labels needs its patterns added.
 
 ### What models, frameworks, APIs, libraries, AI coding tools, or existing projects did you use?
-Gemini (`gemini-2.5-flash`, fallback `-flash-lite`) via google-genai; Playwright; FastAPI/uvicorn; pydantic; pypdf; reportlab; httpx; PyYAML; pytest. No agent framework.
+Gemini (`gemini-flash-latest`; fallback chain of 3.x flash/flash-lite) via google-genai; Playwright; FastAPI/uvicorn; pydantic; pypdf; reportlab; httpx; PyYAML; pytest. No agent framework.
 **Existing project:** several core modules (tool registry/contracts, circuit breaker, loop budgets, context compaction, clause retrieval) are ported and adapted from my own earlier repo `sanwaad`; disclosed in the README.
 **AI coding tool:** Claude Code (Anthropic) assisted implementation; I reviewed the design/code.
 
