@@ -18,6 +18,7 @@ Design choices that matter:
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 from typing import Optional
@@ -76,6 +77,20 @@ _FORM_JS = """
 """
 
 
+_CURSOR_JS = """
+(() => {
+  const c = document.createElement('div');
+  c.style.cssText = 'position:fixed;z-index:2147483647;width:20px;height:20px;border-radius:50%;background:rgba(10,107,91,.45);'
+    + 'border:2px solid #0a6b5b;pointer-events:none;left:-40px;top:-40px;transition:left .3s ease,top .3s ease,transform .12s';
+  const add = () => document.documentElement.appendChild(c);
+  if (document.documentElement) add(); else document.addEventListener('DOMContentLoaded', add);
+  addEventListener('mousemove', e => { c.style.left = (e.clientX - 10) + 'px'; c.style.top = (e.clientY - 10) + 'px'; }, true);
+  addEventListener('mousedown', () => { c.style.transform = 'scale(.55)'; }, true);
+  addEventListener('mouseup', () => { c.style.transform = 'scale(1)'; }, true);
+})();
+"""
+
+
 def render_snapshot(snap: dict, max_text: int = 1200) -> str:
     lines = [f"PAGE: {snap['title']} | {snap['url']}"]
     if snap["alerts"]:
@@ -116,10 +131,16 @@ class BrowserSession:
     async def start(self) -> None:
         self._pw = await async_playwright().start()
         self._browser = await self._pw.chromium.launch(headless=self.headless, slow_mo=self.slow_mo)
-        self._ctx = await self._browser.new_context(viewport={"width": 1100, "height": 800})
+        record_dir = os.environ.get("OPSAGENT_RECORD_DIR")       # demo recording only; off by default
+        kw = {"record_video_dir": record_dir, "record_video_size": {"width": 1100, "height": 800}} if record_dir else {}
+        self._ctx = await self._browser.new_context(viewport={"width": 1100, "height": 800}, **kw)
+        if record_dir:
+            await self._ctx.add_init_script(_CURSOR_JS)   # a visible cursor, so the recording shows what is being clicked
         self.page = await self._ctx.new_page()
 
     async def close(self) -> None:
+        if self._ctx:
+            await self._ctx.close()          # also finalises a recorded video, which is lost if only the browser is closed
         if self._browser:
             await self._browser.close()
         if self._pw:

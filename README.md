@@ -10,7 +10,7 @@
 
 </div>
 
-<p align="center"><a href="https://harshaaalll.github.io/opsagent/"><b>Live project page</b></a> (recorded run, screenshots, approval gate, tests) · <a href="https://github.com/Harshaaalll/opsagent/blob/main/docs/assets/demo.mp4"><b>Walkthrough video</b></a> (narrated from real run artefacts; AI voice)</p>
+<p align="center"><a href="https://harshaaalll.github.io/opsagent/"><b>Live project page</b></a> (recorded run, screenshots, approval gate, tests) · <a href="https://github.com/Harshaaalll/opsagent/blob/main/docs/assets/demo.mp4"><b>Walkthrough video</b></a> (real footage of a real run, captioned, no voiceover)</p>
 
 Built for CentrAlign AI's **AI Employee / Autonomous Company Operator** problem (Founding Engineer track). It runs against a local **mock company**
 (vendor mail portal + ERP + PDF invoices, with switchable faults). No real systems, no real credentials.

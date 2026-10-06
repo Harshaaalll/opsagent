@@ -10,3 +10,4 @@ sandbox/invoices/
 *.egg-info/
 .DS_Store
 company/lessons.jsonl
+.demo-build/
